@@ -37,15 +37,25 @@ var currentShape = {x: 0, y: 0, shape: undefined};
 var upcomingShape;
 var score = 0;
 var rndSeed = 1;
+var bag = [];
+var bagIndex = 0;
 var saveState;
+var speed = 500;
+var changeSpeed = false;
 
 function initialize() {
 	nextShape();
 	applyShape();
 	saveState = getState();
-	setInterval(function () {
+	var loop = function(){
+		if (changeSpeed) {
+			clearInterval(interval);
+			interval = setInterval(loop, speed);
+			changeInterval = false;
+		}
 		update();
-	}, 500);
+	};
+	var interval = setInterval(loop, speed);
 }
 document.onLoad = initialize();
 
@@ -67,6 +77,13 @@ window.onkeydown = function () {
 		saveState = getState();
 	} else if (characterPressed.toUpperCase() == "W") {
 		loadState(saveState);
+	} else if (characterPressed.toUpperCase() == "E") {
+		if (speed == 500) {
+			speed = 0;
+		} else if (speed === 0) {
+			speed = 500;
+		}
+		changeSpeed = true;
 	} else {
 		return true;
 	}
@@ -92,6 +109,8 @@ function moveDown() {
 		}
 	}
 	applyShape();
+	score++;
+	updateScore();
 }
 
 function moveLeft() {
@@ -134,6 +153,15 @@ function clearRows() {
 			rowsToClear.push(row);
 		}
 	}
+	if (rowsToClear.length == 1) {
+		score += 120;
+	} else if (rowsToClear.length == 2) {
+		score += 300;
+	} else if (rowsToClear.length == 3) {
+		score += 600;
+	} else if (rowsToClear.length >= 4) {
+		score += 2400;
+	}
 	for (var toClear = rowsToClear.length - 1; toClear >= 0; toClear--) {
 		grid.splice(rowsToClear[toClear], 1);
 	}
@@ -165,13 +193,34 @@ function removeShape() {
 }
 
 function nextShape() {
-	if (upcomingShape === undefined) {
+	bagIndex += 1;
+	if (bag.length === 0 || bagIndex == bag.length) {
+		generateBag();
+	} 
+	if (bagIndex == bag.length - 1) {
+		var prevSeed = rndSeed;
 		upcomingShape = randomProperty(shapes);
+		rndSeed = prevSeed;
+	} else {
+		upcomingShape = shapes[bag[bagIndex + 1]];
 	}
-	currentShape.shape = upcomingShape;
-	upcomingShape = randomProperty(shapes);
+	currentShape.shape = shapes[bag[bagIndex]];
 	currentShape.x = Math.floor(grid[0].length / 2) - Math.ceil(currentShape.shape[0].length / 2);
 	currentShape.y = 0;
+}
+
+function generateBag() {
+	bag = [];
+	var contents = "";
+	for (var i = 0; i < 7; i++) {
+		var shape = randomKey(shapes);
+		while(contents.indexOf(shape) != -1) {
+			shape = randomKey(shapes);
+		}
+		bag[i] = shape;
+		contents += shape;
+	}
+	bagIndex = 0;
 }
 
 function lose() {
@@ -197,6 +246,7 @@ function lose() {
 	[0,0,0,0,0,0,0,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0],
 	];
+	generateBag();
 	nextShape();
 }
 
@@ -241,7 +291,6 @@ function scan() {
 			}
 		}
 	}
-	console.log(range);
 	applyShape();
 	return distances;
 }
@@ -284,8 +333,8 @@ function output() {
 }
 
 function updateScore() {
-	var score = document.getElementById("score");
-	var html = "<br /><br /><h2>&nbsp;</h2><b>--Upcoming--</b><br />";
+	var scoreDetails = document.getElementById("score");
+	var html = "<br /><br /><h2>&nbsp;</h2><h2>Score: " + score + "</h2><b>--Upcoming--</b><br />";
 	for (var i = 0; i < upcomingShape.length; i++) {
 		var next =replaceAll((upcomingShape[i] + ""), "0", "&nbsp;");
 		html += "<br />&nbsp;&nbsp;&nbsp;&nbsp;" + next;
@@ -295,7 +344,7 @@ function updateScore() {
 		html = replaceAll(html, (c + 1) + ",", "<font color=\"" + colors[c] + "\">" + (c + 1) + "</font>,");
 	}
 	html = replaceAll(replaceAll(replaceAll(html, "&nbsp;,", "&nbsp;&nbsp;"), ",&nbsp;", "&nbsp;&nbsp;"), ",", "&nbsp;");
-	score.innerHTML = html;
+	scoreDetails.innerHTML = html;
 }
 
 function getState() {
@@ -303,7 +352,10 @@ function getState() {
 		grid: clone(grid),
 		currentShape: clone(currentShape),
 		upcomingShape: clone(upcomingShape),
-		rndSeed: clone(rndSeed)
+		bag: clone(bag),
+		bagIndex: clone(bagIndex),
+		rndSeed: clone(rndSeed),
+		score: clone(score)
 	};
 	return state;
 }
@@ -312,8 +364,12 @@ function loadState(state) {
 	grid = clone(state.grid);
 	currentShape = clone(state.currentShape);
 	upcomingShape = clone(state.upcomingShape);
+	bag = clone(state.bag);
+	bagIndex = clone(state.bagIndex);
 	rndSeed = clone(state.rndSeed);
+	score = clone(state.score);
 	output();
+	updateScore();
 }
 
 function clone(obj) {
@@ -321,10 +377,13 @@ function clone(obj) {
 }
 
 function randomProperty(obj) {
+	return(obj[randomKey(obj)]);
+}
+
+function randomKey(obj) {
 	var keys = Object.keys(obj);
 	var i = seededRandom(0, keys.length);
-	console.log(i);
-	return obj[keys[i]];
+	return keys[i];
 }
 
 function replaceAll(target, search, replacement) {
