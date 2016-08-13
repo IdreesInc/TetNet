@@ -34,10 +34,15 @@ var shapes = {
 var colors = ["F92338", "C973FF", "1C76BC", "FEE356", "53D504", "36E0FF", "F8931D"];
 
 var currentShape = {x: 0, y: 0, shape: undefined};
+var upcomingShape;
+var score = 0;
+var rndSeed = 1;
+var saveState;
 
 function initialize() {
 	nextShape();
 	applyShape();
+	saveState = getState();
 	setInterval(function () {
 		update();
 	}, 500);
@@ -58,6 +63,10 @@ window.onkeydown = function () {
 		removeShape();
 		currentShape.shape = shapes[characterPressed.toUpperCase()];
 		applyShape();
+	} else if (characterPressed.toUpperCase() == "Q") {
+		saveState = getState();
+	} else if (characterPressed.toUpperCase() == "W") {
+		loadState(saveState);
 	} else {
 		return true;
 	}
@@ -67,6 +76,7 @@ window.onkeydown = function () {
 function update() {
 	moveDown();
 	output();
+	updateScore();
 }
 
 function moveDown() {
@@ -155,12 +165,17 @@ function removeShape() {
 }
 
 function nextShape() {
-	currentShape.shape = randomProperty(shapes);
+	if (upcomingShape === undefined) {
+		upcomingShape = randomProperty(shapes);
+	}
+	currentShape.shape = upcomingShape;
+	upcomingShape = randomProperty(shapes);
 	currentShape.x = Math.floor(grid[0].length / 2) - Math.ceil(currentShape.shape[0].length / 2);
 	currentShape.y = 0;
 }
 
 function lose() {
+	score = 0;
 	grid = [[0,0,0,0,0,0,0,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0],
@@ -197,6 +212,40 @@ function collides(scene, object) {
 	}
 }
 
+function scan() {
+	removeShape();
+	var peak = 20;
+	var base = -1;
+	for (var y = 0; y < grid.length; y++) {
+		for (var x = 0; x < grid[y].length; x++) {
+			if (grid[y][x] !== 0) {
+				if (y < peak) {
+					peak = y;
+				}
+				if (y > base) {
+					base = y;
+				}
+			}
+		}
+	}
+	var range = base - peak;
+	var distances = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+	for (var row = peak; row <= base; row++) {
+		for (var col = 0; col < grid[row].length; col++) {
+			if (grid[row][col] !== 0 && distances[col] == 1) {
+				if (range === 0) {
+					distances[col] = 0;
+				} else {
+					distances[col] = (row - peak) / range;
+				}
+			}
+		}
+	}
+	console.log(range);
+	applyShape();
+	return distances;
+}
+
 function rotate(matrix, times) {
 	for (var t = 0; t < times; t++) {
 		matrix = transpose(matrix);
@@ -217,25 +266,77 @@ function transpose(array) {
 
 function output() {
 	var output = document.getElementById("output");
-	var html = "<h1>TetNet</h1><br />var grid =";
+	var html = "<h1>TetNet</h1><br />var grid = [";
+	var space = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 	for (var i = 0; i < grid.length; i++) {
-		html += "<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + grid[i];
+		if (i === 0) {
+			html += "[" + grid[i] + "]";
+		} else {
+			html += "<br />" + space + "[" + grid[i] + "]";
+		}
 	}
-	html += "<br />];";
-
+	html += "];";
 	for (var c = 0; c < colors.length; c++) {
 		html = replaceAll(html, "," + (c + 1), ",<font color=\"" + colors[c] + "\">" + (c + 1) + "</font>");
 		html = replaceAll(html, (c + 1) + ",", "<font color=\"" + colors[c] + "\">" + (c + 1) + "</font>,");
 	}
-
 	output.innerHTML = html;
+}
+
+function updateScore() {
+	var score = document.getElementById("score");
+	var html = "<br /><br /><h2>&nbsp;</h2><b>--Upcoming--</b><br />";
+	for (var i = 0; i < upcomingShape.length; i++) {
+		var next =replaceAll((upcomingShape[i] + ""), "0", "&nbsp;");
+		html += "<br />&nbsp;&nbsp;&nbsp;&nbsp;" + next;
+	}
+	for (var c = 0; c < colors.length; c++) {
+		html = replaceAll(html, "," + (c + 1), ",<font color=\"" + colors[c] + "\">" + (c + 1) + "</font>");
+		html = replaceAll(html, (c + 1) + ",", "<font color=\"" + colors[c] + "\">" + (c + 1) + "</font>,");
+	}
+	html = replaceAll(replaceAll(replaceAll(html, "&nbsp;,", "&nbsp;&nbsp;"), ",&nbsp;", "&nbsp;&nbsp;"), ",", "&nbsp;");
+	score.innerHTML = html;
+}
+
+function getState() {
+	var state = {
+		grid: clone(grid),
+		currentShape: clone(currentShape),
+		upcomingShape: clone(upcomingShape),
+		rndSeed: clone(rndSeed)
+	};
+	return state;
+}
+
+function loadState(state) {
+	grid = clone(state.grid);
+	currentShape = clone(state.currentShape);
+	upcomingShape = clone(state.upcomingShape);
+	rndSeed = clone(state.rndSeed);
+	output();
+}
+
+function clone(obj) {
+	return JSON.parse(JSON.stringify(obj));
 }
 
 function randomProperty(obj) {
 	var keys = Object.keys(obj);
-	return obj[keys[ keys.length * Math.random() << 0]];
+	var i = seededRandom(0, keys.length);
+	console.log(i);
+	return obj[keys[i]];
 }
 
 function replaceAll(target, search, replacement) {
 	return target.replace(new RegExp(search, 'g'), replacement);
+}
+
+function seededRandom(min, max) {
+	max = max || 1;
+	min = min || 0;
+
+	rndSeed = (rndSeed * 9301 + 49297) % 233280;
+	var rnd = rndSeed / 233280;
+
+	return Math.floor(min + rnd * (max - min));
 }
