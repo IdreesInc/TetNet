@@ -59,6 +59,10 @@ var mutationRate = 0.05;
 var mutationStep = 0.2;
 var speeds = [500,100,1,0];
 var speedIndex = 0;
+var inspectMoveSelection = false;
+var moveAlgorithm = {};
+var movesTaken = 0;
+var moveLimit = 500;
 
 function initialize() {
 	archive.populationSize = populationSize;
@@ -128,9 +132,7 @@ window.onkeydown = function () {
 	} else if (characterPressed.toUpperCase() == "R") {
 		loadArchive(prompt("Insert archive:"));
 	} else if (characterPressed.toUpperCase() == "F") {
-		console.log("Height: " + getTotalHeight());
-		console.log("Holes: " + getHoles());
-		console.log("Roughness: " + getRoughness());
+		inspectMoveSelection = !inspectMoveSelection;
 	} else {
 		return true;
 	}
@@ -142,10 +144,12 @@ function createInitialPopulation() {
 	for (var i = 0; i < populationSize; i++) {
 		var genome = {
 			id: Math.random(),
-			rowsCleared: Math.random() * 1,
-			cumulativeHeight: Math.random() * -1,
-			holes: Math.random() * -1,
-			roughness: Math.random() * -1
+			rowsCleared: Math.random() - 0.5,
+			weightedHeight: Math.random() - 0.5,
+			cumulativeHeight: Math.random() - 0.5,
+			relativeHeight: Math.random() - 0.5,
+			holes: Math.random() * 0.5,
+			roughness: Math.random() - 0.5,
 		};
 		genomes.push(genome);
 	}
@@ -158,6 +162,7 @@ function evaluateNextGenome() {
 		evolve();
 	}
 	loadState(roundState);
+	movesTaken = 0;
 	makeNextMove();
 }
 
@@ -180,19 +185,20 @@ function evolve() {
 	for (var i = 0; i < genomes.length; i++) {
 		totalFitness += genomes[i].fitness;
 	}
-	var weights = [];
+/*	var weights = [];
 	var accumulated = 0;
 	for (var j = 0; j < genomes.length; j++) {
 		weights[j] = accumulated + (genomes[j].fitness / totalFitness);
 		accumulated += genomes[j].fitness / totalFitness;
-	}
+	}*/
 	function getRandomGenome() {
-		var random = Math.random() * 1;
+/*		var random = Math.random() * 1;
 		for (var k = 0; k < weights.length; k++) {
 			if (weights[k] >= random) {
 				return genomes[k];
 			}
-		}
+		}*/
+		return genomes[randomWeightedNumBetween(0, genomes.length - 1)];
 	}
 	var children = [];
 	children.push(clone(genomes[0]));
@@ -209,36 +215,47 @@ function makeChild(mum, dad) {
 	var child = {
 		id : Math.random(),
 		rowsCleared: randomChoice(mum.rowsCleared, dad.rowsCleared),
+		weightedHeight: randomChoice(mum.weightedHeight, dad.weightedHeight),
 		cumulativeHeight: randomChoice(mum.cumulativeHeight, dad.cumulativeHeight),
+		relativeHeight: randomChoice(mum.relativeHeight, dad.relativeHeight),
 		holes: randomChoice(mum.holes, dad.holes),
 		roughness: randomChoice(mum.roughness, dad.roughness),
 		fitness: -1
 	};
 	if (Math.random() < mutationRate) {
-		child.rowsCleared = child.rowsCleared + Math.random() * mutationStep;
+		child.rowsCleared = child.rowsCleared + Math.random() * mutationStep * 2 - mutationStep;
 	}
 	if (Math.random() < mutationRate) {
-		child.cumulativeHeight = child.cumulativeHeight + Math.random() * -mutationStep;
+		child.weightedHeight = child.weightedHeight + Math.random() * mutationStep * 2 - mutationStep;
 	}
 	if (Math.random() < mutationRate) {
-		child.holes = child.holes + Math.random() * -mutationStep;
+		child.cumulativeHeight = child.cumulativeHeight + Math.random() * mutationStep * 2 - mutationStep;
 	}
 	if (Math.random() < mutationRate) {
-		child.roughness = child.roughness + Math.random() * -mutationStep;
+		child.relativeHeight = child.relativeHeight + Math.random() * mutationStep * 2 - mutationStep;
+	}
+	if (Math.random() < mutationRate) {
+		child.holes = child.holes + Math.random() * mutationStep * 2 - mutationStep;
+	}
+	if (Math.random() < mutationRate) {
+		child.roughness = child.roughness + Math.random() * mutationStep * 2 - mutationStep;
 	}
 	return child;
 }
 
-function makeNextMove() {
+function getAllPossibleMoves() {
 	var lastState = getState();
 	var possibleMoves = [];
 	var possibleMoveRatings = [];
+	var iterations = 0;
 	for (var rots = 0; rots < 4; rots++) {
-		for (var j = 0; j < rots; j++) {
-			rotateShape();
-		}
+		var oldX = [];
 		for (var t = -5; t <= 5; t++) {
+			iterations++;
 			loadState(lastState);
+			for (var j = 0; j < rots; j++) {
+				rotateShape();
+			}
 			if (t < 0) {
 				for (var l = 0; l < Math.abs(t); l++) {
 					moveLeft();
@@ -248,49 +265,94 @@ function makeNextMove() {
 					moveRight();
 				}
 			}
-			var moveDownResults = moveDown();
-			while (moveDownResults.moved) {
-				moveDownResults = moveDown();
+			if (!contains(oldX, currentShape.x)) {
+				var moveDownResults = moveDown();
+				while (moveDownResults.moved) {
+					moveDownResults = moveDown();
+				}
+				var algorithm = {
+					rowsCleared: moveDownResults.rowsCleared,
+					weightedHeight: Math.pow(getHeight(), 1.5),
+					cumulativeHeight: getCumulativeHeight(),
+					relativeHeight: getRelativeHeight(),
+					holes: getHoles(),
+					roughness: getRoughness()
+				};
+				var rating = 0;
+				rating += algorithm.rowsCleared * genomes[currentGenome].rowsCleared;
+				rating += algorithm.weightedHeight * genomes[currentGenome].weightedHeight;
+				rating += algorithm.cumulativeHeight * genomes[currentGenome].cumulativeHeight;
+				rating += algorithm.relativeHeight * genomes[currentGenome].relativeHeight;
+				rating += algorithm.holes * genomes[currentGenome].holes;
+				rating += algorithm.roughness * genomes[currentGenome].roughness;
+
+				if (moveDownResults.lose) {
+					rating -= 500;
+				}
+				possibleMoves.push({rotations: rots, translation: t, rating: rating, algorithm: algorithm});
+				oldX.push(currentShape.x);
 			}
-			var rating = 0;
-			rating += moveDownResults.rowsCleared * genomes[currentGenome].rowsCleared;
-			rating += getTotalHeight() * genomes[currentGenome].cumulativeHeight;
-			rating += getHoles() * genomes[currentGenome].holes;
-			rating += getRoughness() * genomes[currentGenome].roughness;
-			if (moveDownResults.lose) {
-				rating -= 500;
-			}
-			possibleMoveRatings.push(rating);
-			possibleMoves.push({rotations: clone(rots), translation: clone(t), rating: rating, results: moveDownResults});
 		}
 	}
-	var maxRating = -1000;
+	loadState(lastState);
+	return possibleMoves;
+}
+
+function getHighestRatedMove(moves) {
+	var maxRating = -10000000000000;
 	var maxMove = -1;
 	var ties = [];
-	for (var index = 0; index < possibleMoves.length; index++) {
-		if (possibleMoveRatings[index] > maxRating) {
-			maxRating = possibleMoveRatings[index];
+	for (var index = 0; index < moves.length; index++) {
+		if (moves[index].rating > maxRating) {
+			maxRating = moves[index].rating;
 			maxMove = index;
 			ties = [index];
-		} else if (possibleMoveRatings[index] == maxRating) {
+		} else if (moves[index].rating == maxRating) {
 			ties.push(index);
 		}
 	}
-	var move = possibleMoves[ties[randomNumBetween(0, ties.length - 1)]];
-	loadState(lastState);
-	for (var rotations = 0; rotations < move.rotations; rotations++) {
-		rotateShape();
-	}
-	if (move.translation < 0) {
-		for (var lefts = 0; lefts < Math.abs(move.translation); lefts++) {
-			moveLeft();
+	//var move = possibleMoves[ties[randomNumBetween(0, ties.length - 1)]];
+	var move = moves[ties[0]];
+	move.algorithm.ties = ties.length;
+	return move;
+}
+
+function makeNextMove() {
+	movesTaken++;
+	if (movesTaken > moveLimit) {
+		genomes[currentGenome].fitness = clone(score);
+		evaluateNextGenome();
+	} else {
+		var oldDraw = clone(draw);
+		draw = false;
+		var possibleMoves = getAllPossibleMoves();
+		var lastState = getState();
+		nextShape();
+		for (var i = 0; i < possibleMoves.length; i++) {
+			var nextMove = getHighestRatedMove(getAllPossibleMoves());
+			possibleMoves[i].rating += nextMove.rating;
 		}
-	} else if (move.translation > 0) {
-		for (var rights = 0; rights < move.translation; rights++) {
-			moveRight();
+		loadState(lastState);
+		var move = getHighestRatedMove(possibleMoves);
+		for (var rotations = 0; rotations < move.rotations; rotations++) {
+			rotateShape();
 		}
+		if (move.translation < 0) {
+			for (var lefts = 0; lefts < Math.abs(move.translation); lefts++) {
+				moveLeft();
+			}
+		} else if (move.translation > 0) {
+			for (var rights = 0; rights < move.translation; rights++) {
+				moveRight();
+			}
+		}
+		if (inspectMoveSelection) {
+			moveAlgorithm = move.algorithm;
+		}
+		draw = oldDraw;
+		output();
+		updateScore();
 	}
-	output();
 }
 
 function update() {
@@ -330,7 +392,7 @@ function moveDown() {
 		result.moved = false;
 	}
 	applyShape();
-	//score++;
+	score++;
 	updateScore();
 	output();
 	return result;
@@ -542,9 +604,13 @@ function updateScore() {
 		}
 		html += "<br />Speed: " + speed;
 		if (ai) {
+			html += "<br />Moves: " + movesTaken + "/" + moveLimit;
 			html += "<br />Generation: " + generation;
 			html += "<br />Individual: " + (currentGenome + 1)  + "/" + populationSize;
 			html += "<br /><pre style=\"font-size:12px\">" + JSON.stringify(genomes[currentGenome], null, 2) + "</pre>";
+			if (inspectMoveSelection) {
+				html += "<br /><pre style=\"font-size:12px\">" + JSON.stringify(moveAlgorithm, null, 2) + "</pre>";
+			}
 		}
 		html = replaceAll(replaceAll(replaceAll(html, "&nbsp;,", "&nbsp;&nbsp;"), ",&nbsp;", "&nbsp;&nbsp;"), ",", "&nbsp;");
 		scoreDetails.innerHTML = html;
@@ -576,7 +642,7 @@ function loadState(state) {
 	updateScore();
 }
 
-function getTotalHeight() {
+function getCumulativeHeight() {
 	removeShape();
 	var peaks = [20,20,20,20,20,20,20,20,20,20];
 	for (var row = 0; row < grid.length; row++) {
@@ -616,6 +682,29 @@ function getHoles() {
 	return holes;
 }
 
+
+function getHolesArray() {
+	var array = clone(grid);
+	removeShape();
+	var peaks = [20,20,20,20,20,20,20,20,20,20];
+	for (var row = 0; row < grid.length; row++) {
+		for (var col = 0; col < grid[row].length; col++) {
+			if (grid[row][col] !== 0 && peaks[col] === 20) {
+				peaks[col] = row;
+			}
+		}
+	}
+	for (var x = 0; x < peaks.length; x++) {
+		for (var y = peaks[x]; y < grid.length; y++) {
+			if (grid[y][x] === 0) {
+				array[y][x] = -1;
+			}
+		}
+	}
+	applyShape();
+	return array;
+}
+
 function getRoughness() {
 	removeShape();
 	var peaks = [20,20,20,20,20,20,20,20,20,20];
@@ -634,6 +723,34 @@ function getRoughness() {
 	}
 	applyShape();
 	return roughness;
+}
+
+function getRelativeHeight() {
+	removeShape();
+	var peaks = [20,20,20,20,20,20,20,20,20,20];
+	for (var row = 0; row < grid.length; row++) {
+		for (var col = 0; col < grid[row].length; col++) {
+			if (grid[row][col] !== 0 && peaks[col] === 20) {
+				peaks[col] = row;
+			}
+		}
+	}
+	applyShape();
+	return Math.max.apply(Math, peaks) - Math.min.apply(Math, peaks);
+}
+
+function getHeight() {
+	removeShape();
+	var peaks = [20,20,20,20,20,20,20,20,20,20];
+	for (var row = 0; row < grid.length; row++) {
+		for (var col = 0; col < grid[row].length; col++) {
+			if (grid[row][col] !== 0 && peaks[col] === 20) {
+				peaks[col] = row;
+			}
+		}
+	}
+	applyShape();
+	return 20 - Math.min.apply(Math, peaks);
 }
 
 function loadArchive(archiveString) {
@@ -679,10 +796,24 @@ function randomNumBetween(min, max) {
 	return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
+function randomWeightedNumBetween(min, max) {
+	return Math.floor(Math.pow(Math.random(), 2) * (max - min + 1) + min);
+}
+
 function randomChoice(propOne, propTwo) {
 	if (Math.round(Math.random()) === 0) {
 		return clone(propOne);
 	} else {
 		return clone(propTwo);
 	}
+}
+
+function contains(a, obj) {
+	var i = a.length;
+	while (i--) {
+		if (a[i] === obj) {
+			return true;
+		}
+	}
+	return false;
 }
