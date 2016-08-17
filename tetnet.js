@@ -131,6 +131,8 @@ window.onkeydown = function () {
 		ai = !ai;
 	} else if (characterPressed.toUpperCase() == "R") {
 		loadArchive(prompt("Insert archive:"));
+	} else if (characterPressed.toUpperCase() == "G") {
+		prompt("Archive from last generation (including from last session):", localStorage.getItem("archive"));
 	} else if (characterPressed.toUpperCase() == "F") {
 		inspectMoveSelection = !inspectMoveSelection;
 	} else {
@@ -177,7 +179,6 @@ function evolve() {
 	});
 	archive.elites.push(clone(genomes[0]));
 	console.log("Elite's fitness: " + genomes[0].fitness);
-	console.log(JSON.stringify(archive));
 	while(genomes.length > populationSize / 2) {
 		genomes.pop();
 	}
@@ -209,6 +210,8 @@ function evolve() {
 	genomes = genomes.concat(children);
 	archive.genomes = clone(genomes);
 	archive.currentGeneration = clone(generation);
+	console.log(JSON.stringify(archive));
+	localStorage.setItem("archive", JSON.stringify(archive));
 }
 
 function makeChild(mum, dad) {
@@ -531,6 +534,7 @@ function reset() {
 	[0,0,0,0,0,0,0,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0],
 	];
+	moves = 0;
 	generateBag();
 	nextShape();
 }
