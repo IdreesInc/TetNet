@@ -132,12 +132,17 @@ window.onkeydown = function () {
 	} else if (characterPressed.toUpperCase() == "R") {
 		loadArchive(prompt("Insert archive:"));
 	} else if (characterPressed.toUpperCase() == "G") {
-		prompt("Archive from last generation (including from last session):", localStorage.getItem("archive"));
+		if (localStorage.getItem("archive") == null) {
+			alert("No archive saved. Archives are saved after a generation has passed, and remain across sessions. Try again once a generation has passed");
+		} else {
+			prompt("Archive from last generation (including from last session):", localStorage.getItem("archive"));
+		}
 	} else if (characterPressed.toUpperCase() == "F") {
 		inspectMoveSelection = !inspectMoveSelection;
 	} else {
 		return true;
 	}
+	output();
 	return false;
 };
 
@@ -572,7 +577,7 @@ function transpose(array) {
 function output() {
 	if (draw) {
 		var output = document.getElementById("output");
-		var html = "<h1>TetNet</h1><br />var grid = [";
+		var html = "<h1>TetNet</h1><h5>Evolutionary approach to Tetris AI</h5>var grid = [";
 		var space = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 		for (var i = 0; i < grid.length; i++) {
 			if (i === 0) {
