@@ -48,33 +48,17 @@
   <div id="signature" class="text">Created By Idrees Hassan<br />Questions? Just ask!<br /><a href="mailto:&#105;&#100;&#114;&#101;&#101;&#115;&#064;&#105;&#100;&#114;&#101;&#101;&#115;&#105;&#110;&#099;&#046;&#099;&#111;&#109;" target="_top">&#105;&#100;&#114;&#101;&#101;&#115;&#064;&#105;&#100;&#114;&#101;&#101;&#115;&#105;&#110;&#099;&#046;&#099;&#111;&#109;</a></div>
   <script src="./tetnet.js"></script>
   <script>
-    var QueryString = function () {
-      var query_string = {};
-      var query = window.location.search.substring(1);
-      var vars = query.split("&");
-      for (var i=0;i<vars.length;i++) {
-        var pair = vars[i].split("=");
-        if (typeof query_string[pair[0]] === "undefined") {
-          query_string[pair[0]] = decodeURIComponent(pair[1]);
-        } else if (typeof query_string[pair[0]] === "string") {
-          var arr = [ query_string[pair[0]],decodeURIComponent(pair[1]) ];
-          query_string[pair[0]] = arr;
-        } else {
-          query_string[pair[0]].push(decodeURIComponent(pair[1]));
-        }
-      } 
-      return query_string;
-    }();
-    if (QueryString.useArchive !== undefined && Boolean(QueryString.useArchive)) {
-      var archiveJSON = $.ajax({
-        url: "./archive.json",
-        async: false
-      }).responseText;
-      loadArchive(archiveJSON);
-    }
+    $(window).keydown(function (e){
+      if (e.ctrlKey) {
+        var archiveJSON = $.ajax({
+          url: "./archive.json",
+          async: false
+        }).responseText;
+        loadArchive(archiveJSON);
+      }
+    });
   </script>
   <script type="text/javascript">
   </script>
-
 </body>
 </html>
