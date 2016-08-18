@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
- <title>Tetris</title>
+ <title>TetNet</title>
  <link href='https://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
  <style>
    body {
@@ -39,6 +39,7 @@
     color: inherit;
   }
 </style>
+<script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s="   crossorigin="anonymous"></script>
 </head>
 <body>
   <div id="output" class="text"></div>
@@ -46,6 +47,32 @@
   <div id="instructions" class="text"><br />[Key Commands]<br />Move Shape: [Arrow Keys]<br />Rotate Shape: [Up Arrow]<br />Drop Shape: [Down Arrow]<br />Toggle AI: [A]<br />Speed Up: [E]<br />Slow Down: [D]<br />Save State: [Q]<br />Load State: [W]<br />Get Archive: [G]<br />Load Archive: [R]<br />Pick Shape: [I,O,T,S,Z,J,L]</div>
   <div id="signature" class="text">Created By Idrees Hassan<br />Questions? Just ask!<br /><a href="mailto:&#105;&#100;&#114;&#101;&#101;&#115;&#064;&#105;&#100;&#114;&#101;&#101;&#115;&#105;&#110;&#099;&#046;&#099;&#111;&#109;" target="_top">&#105;&#100;&#114;&#101;&#101;&#115;&#064;&#105;&#100;&#114;&#101;&#101;&#115;&#105;&#110;&#099;&#046;&#099;&#111;&#109;</a></div>
   <script src="./tetnet.js"></script>
+  <script>
+    var QueryString = function () {
+      var query_string = {};
+      var query = window.location.search.substring(1);
+      var vars = query.split("&");
+      for (var i=0;i<vars.length;i++) {
+        var pair = vars[i].split("=");
+        if (typeof query_string[pair[0]] === "undefined") {
+          query_string[pair[0]] = decodeURIComponent(pair[1]);
+        } else if (typeof query_string[pair[0]] === "string") {
+          var arr = [ query_string[pair[0]],decodeURIComponent(pair[1]) ];
+          query_string[pair[0]] = arr;
+        } else {
+          query_string[pair[0]].push(decodeURIComponent(pair[1]));
+        }
+      } 
+      return query_string;
+    }();
+    if (QueryString.useArchive !== undefined && Boolean(QueryString.useArchive)) {
+      var archiveJSON = $.ajax({
+        url: "./archive.json",
+        async: false
+      }).responseText;
+      loadArchive(archiveJSON);
+    }
+  </script>
   <script type="text/javascript">
   </script>
 
