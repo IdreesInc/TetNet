@@ -544,7 +544,7 @@ window.onkeydown = function () {
  	bagIndex += 1;
  	if (bag.length === 0 || bagIndex == bag.length) {
  		generateBag();
- 	} 
+ 	}
  	if (bagIndex == bag.length - 1) {
  		var prevSeed = rndSeed;
  		upcomingShape = randomProperty(shapes);
@@ -629,14 +629,14 @@ window.onkeydown = function () {
  		matrix = transpose(matrix);
  		for (var i = 0; i < matrix.length; i++) {
  			matrix[i].reverse();
- 		} 
+ 		}
  	}
  	return matrix;
  }
 
  function transpose(array) {
- 	return array[0].map(function(col, i) { 
- 		return array.map(function(row) { 
+ 	return array[0].map(function(col, i) {
+ 		return array.map(function(row) {
  			return row[i];
  		});
  	});
