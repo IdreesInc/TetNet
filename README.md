@@ -1,7 +1,7 @@
 ## About TetNet – Genetic Algorithms and Tetris
 #### TetNet (see: Tetris + Skynet)  is a program that uses genetic algorithms to build an AI that can play Tetris.
 
-![TetNet running](http://idreesinc.com/wp-content/uploads/TetNet_GIF_1.gif)
+![TetNet running](http://idreesinc.com/images/tetnet_in_action.gif)
 
 *TetNet running after 25 generations of evolution*
 
