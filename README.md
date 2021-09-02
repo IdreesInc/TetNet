@@ -1,6 +1,6 @@
 ## TetNet – Evolutionary Tetris AI using Genetic Algorithms
 
-Made with ❤ and frustration by [Idrees Hassan](https://idreesinc.com)
+Made with ❤ and frustration by [Idrees Hassan](https://idreesinc.com?utm_source=github&utm_medium=readme&utm_campaign=tetnet)
 
 #### TetNet (see: Tetris + Skynet)  is a program that uses genetic algorithms to build an AI that can play Tetris.
 
@@ -8,7 +8,7 @@ Made with ❤ and frustration by [Idrees Hassan](https://idreesinc.com)
 
 *TetNet running after 25 generations of evolution*
 
-#### To learn more, check out my write-up [here!](http://idreesinc.com/about-tetnet.html)
+#### To learn more, check out my write-up [here!](http://idreesinc.com/about-tetnet.html?utm_source=github&utm_medium=readme&utm_campaign=tetnet)
 
 #### Or [click here](https://cdn.rawgit.com/IdreesInc/TetNet/master/Tetris.html) to run the demo and see it in action!
 
@@ -41,4 +41,4 @@ A "move" occurs when a new shape appears at the top of the grid. The genome scor
 Of all the possible moves, the moves with the highest score (as determined by the genome) is executed and the process repeats until the genome either loses or hits the maximum number of moves allowed (in this case, 500). Once the game is over for the genome, the resultant score is used as this genome's fitness score, which will later be compared against all of the other genomes in the population. The game is reset to the state it was at before the last genome was evaluated and the next genome is evaluated until all the genomes in the population have a fitness score. Then, the population has evolved and a new generation begins (They grow up so fast!).
 
 
-__To learn more and see how different behaviors emerged during the development process, visit my site [here](http://idreesinc.com/about-tetnet.html)__
+__To learn more and see how different behaviors emerged during the development process, visit my site [here](http://idreesinc.com/about-tetnet.html?utm_source=github&utm_medium=readme&utm_campaign=tetnet)__
