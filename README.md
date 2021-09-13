@@ -1,14 +1,14 @@
-## TetNet – Evolutionary Tetris AI using Genetic Algorithms
+# TetNet – Evolutionary Tetris AI using Genetic Algorithms
 
 Made with ❤ and frustration by [Idrees Hassan](https://idreesinc.com?utm_source=github&utm_medium=readme&utm_campaign=tetnet)
 
-#### TetNet (see: Tetris + Skynet)  is a program that uses genetic algorithms to build an AI that can play Tetris.
+### TetNet (see: Tetris + Skynet)  is a program that uses genetic algorithms to build an AI that can play Tetris.
 
 ![TetNet running](http://idreesinc.com/images/tetnet_in_action.gif)
 
 *TetNet running after 25 generations of evolution*
 
-#### To learn more, check out my write-up [here!](http://idreesinc.com/about-tetnet.html?utm_source=github&utm_medium=readme&utm_campaign=tetnet)
+### To learn more, check out my write-up [here!](http://idreesinc.com/about-tetnet.html?utm_source=github&utm_medium=readme&utm_campaign=tetnet)
 
 #### Or [click here](https://cdn.rawgit.com/IdreesInc/TetNet/master/Tetris.html) to run the demo and see it in action!
 
