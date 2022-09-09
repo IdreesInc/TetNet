@@ -31,7 +31,7 @@ var shapes = {
 	Z: [[7,7,0], [0,7,7], [0,0,0]]
 };
 
-var colors = ["F92338", "C973FF", "1C76BC", "FEE356", "53D504", "36E0FF", "F8931D"];
+var colors = ["00F4EB", "0000EF", "EFA007", "F0F005", "00F101", "A100F0", "ED0200"];
 
 var currentShape = {x: 0, y: 0, shape: undefined};
 var upcomingShape;
