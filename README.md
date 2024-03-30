@@ -10,7 +10,7 @@ Made with ❤ and frustration by [Idrees Hassan](https://idreesinc.com?utm_sourc
 
 ### To learn more, check out my write-up [here!](http://idreesinc.com/about-tetnet.html?utm_source=github&utm_medium=readme&utm_campaign=tetnet)
 
-#### Or [click here](https://cdn.rawgit.com/IdreesInc/TetNet/master/Tetris.html) to run the demo and see it in action!
+### Or [click here](https://idreesinc.github.io/TetNet/Tetris) to run the demo and see it in action!
 
 ## How it works
 
