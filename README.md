@@ -2,6 +2,10 @@
 
 Made with ❤ and frustration by [Idrees Hassan](https://idreesinc.com?utm_source=github&utm_medium=readme&utm_campaign=tetnet)
 
+<a href="https://discord.gg/6yxE9prcNc" target="_blank">
+	<img alt="Discord" src="https://img.shields.io/discord/1398471368403583120?logo=discord&logoColor=fff&label=discord&color=5865F2">
+</a>
+
 ### TetNet (see: Tetris + Skynet)  is a program that uses genetic algorithms to build an AI that can play Tetris.
 
 ![TetNet running](http://idreesinc.com/images/tetnet_in_action.gif)
